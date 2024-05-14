@@ -1,9 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 import cv2
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import StreamingResponse, FileResponse
 from deepface import DeepFace
+import uuid
+import os
+from random import randint
 
 app = FastAPI()
+db= []
 
 models = [
   "VGG-Face", 
@@ -47,39 +51,32 @@ def use_webcam (mirror=False): # live feed and face matching
          ret, frame = cap.read()
          if not ret:
             break
-         else:
-            result = DeepFace.verify(img1_path= frame, img2_path= "test.jpg", detector_backend = backends[7], enforce_detection= False) # face matching
-            for face in result: 
-                if "region" in face: # generation of bounding box for faces detected in the result, not working --
-                    x, y, w, h = map(int, face["region"])
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-         
-         txt = str(result)
-         cv2.putText(frame, txt, (50,50), cv2.FONT_HERSHEY_SIMPLEX,1, (0,255,0),2 )
+        
+        faces = DeepFace.extract_faces(img_path = frame, detector_backend = backends[7])
+        x = []
+        y = []
+        w = []
+        h = []
+        for face in faces:
+         x.append(face['facial_area']['x'])
+         y.append(face['facial_area']['y'])
+         w.append(face['facial_area']['w'])
+         h.append(face['facial_area']['h'])
 
-         ret, buffer = cv2.imencode('.jpeg', frame)
-         frame_bytes = buffer.tobytes()
-         yield(b'--frame\r\n'
+        for i in range(len(faces)):
+            cv2.rectangle(frame, (x[i], y[i]), (x[i] + w[i], y[i] + h[i]) , (0,255,0), 2)
+
+        if DeepFace.verify(img1_path= frame, img2_path= "img2.jpg", detector_backend = backends[7], enforce_detection= False)['verified']: # face matching
+            cv2.putText(frame, "MATCH!", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
+
+        ret, buffer = cv2.imencode('.jpeg', frame)
+        frame_bytes = buffer.tobytes()
+        yield(b'--frame\r\n'
                   b'Content-Type: image/jepg\r\n\r\n' + frame_bytes + b'\r\n')
-            
+        
     finally:
       cap.release()
-
-def show_images (): # test code for function: detect faces in a static image + generation of bounding box for every face detected
-    faces = DeepFace.extract_faces(
-    img_path = "img2.jpg", 
-    detector_backend = backends[7],
-)
-    print(faces)
-    face_data = faces[0]['facial_area']
-    cv_img = cv2.imread("img2.jpg")
-    #print(face_data) ## error: face_data has too many values -> need to extract x, y, w, and h ONLY
-    x1, y1, width, height = face_data[0].values() # error -- too many values 
-    face_with_box = cv2.rectangle(cv_img, (x1, y1), (x1 + width, y1 + height) , (0,255,0), 2)
-    
-    cv2.imwrite("withbox.jpg", face_with_box)
-
-
+   
 @app.get("/") 
 def index ():
     return {"-- Home Page!"}
@@ -88,9 +85,28 @@ def index ():
 def cv_camera():
     return StreamingResponse(use_webcam(), media_type="multipart/x-mixed-replace; boundary=frame")
 
-@app.get("/show-faces") # test endpoint: showing processed imgs for bounding box generation
-def get_image():
-    return Response(show_images(), media_type="image/png")
+@app.get("/show-faces") # test end point for face detection
+def show_images (): # test code for function: detect faces in a STATIC image + generation of bounding box for every face detected
+    faces = DeepFace.extract_faces(
+    img_path = "img3.jpg", 
+    detector_backend = backends[7],
+)
+    print(faces)
+    x = []
+    y = []
+    w = []
+    h = []
+    for face in faces:
+        x.append(face['facial_area']['x'])
+        y.append(face['facial_area']['y'])
+        w.append(face['facial_area']['w'])
+        h.append(face['facial_area']['h'])
+
+    cv_img = cv2.imread("img3.jpg") 
+    for i in range(len(faces)):
+        face_with_box = cv2.rectangle(cv_img, (x[i], y[i]), (x[i] + w[i], y[i] + h[i]) , (0,255,0), 2)
+    cv2.imwrite("withbox-check.jpg", face_with_box)
+
 
 @app.get("/comparison-image") # test endpoint for facial recog (static)
 def compare_images ():
@@ -116,3 +132,10 @@ def extract_images ():
     detector_backend = backends[7]
 )
     return {"Faces present": len(face)}
+
+@app.post("/upload-image")
+async def create_upload_file(file: UploadFile = File(...)):
+    file.filename = f"{uuid.uuid4()}.jpg"
+    contents = await file.read() 
+    db.append(contents)
+    return {"filename": file.filename}
