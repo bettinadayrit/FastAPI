@@ -10,36 +10,36 @@ app = FastAPI()
 db= []
 
 models = [
-  "VGG-Face", 
-  "Facenet", 
-  "Facenet512", 
-  "OpenFace", 
-  "DeepFace", 
-  "DeepID", 
-  "ArcFace", 
-  "Dlib", 
-  "SFace",
-  "GhostFaceNet",
+    "VGG-Face",
+    "Facenet",
+    "Facenet512",
+    "OpenFace",
+    "DeepFace",
+    "DeepID",
+    "ArcFace",
+    "Dlib",
+    "SFace",
+    "GhostFaceNet",
 ]
 
 backends = [
-  'opencv', 
-  'ssd', 
-  'dlib', 
-  'mtcnn', 
-  'fastmtcnn',
-  'retinaface', 
-  'mediapipe',
-  'yolov8',
-  'yunet',
-  'centerface',
+    "opencv",
+    "ssd",
+    "dlib",
+    "mtcnn",
+    "fastmtcnn",
+    "retinaface",
+    "mediapipe",
+    "yolov8",
+    "yunet",
+    "centerface",
 ]
 
 def use_webcam (mirror=False): # live feed and face matching
     cap = cv2.VideoCapture('rtsp://192.168.1.250:554/h264')
 
     if mirror:
-        frame= cv2.flip(frame, 1)
+        frame = cv2.flip(frame, 1)
 
     if cap.isOpened: # checking if: the camera is opened // usual error: stream timeout triggered after 30s, but camera is opened
        print("Camera is opened")
@@ -83,7 +83,9 @@ def index ():
 
 @app.get("/opencv-camera") #endpoint: live camera feed
 def cv_camera():
-    return StreamingResponse(use_webcam(), media_type="multipart/x-mixed-replace; boundary=frame")
+    return StreamingResponse(
+        use_webcam(), media_type="multipart/x-mixed-replace; boundary=frame"
+    )
 
 @app.get("/show-faces") # test end point for face detection
 def show_images (): # test code for function: detect faces in a STATIC image + generation of bounding box for every face detected

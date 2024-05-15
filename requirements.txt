@@ -1,5 +1,6 @@
-deepface
-opencv-python-headless
-fastapi
-tf-keras
-ultralytics
+deepface==0.0.91
+fastapi==0.111.0
+keras==2.13.1
+ultralytics==8.2.14
+
+
