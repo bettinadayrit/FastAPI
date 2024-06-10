@@ -1,9 +1,9 @@
-deepface==0.0.91
-fastapi==0.111.0
-keras==3.3.3
-ultralytics==8.2.16
-opencv-python-headless==4.9.0.80
-opencv-python==4.9.0.80
-tf_keras==2.16.0
-
-
+deepface==0.0.91 
+fastapi==0.111.0 
+keras==3.3.3 
+ultralytics==8.2.16 
+opencv-python-headless==4.9.0.80 
+opencv-python==4.9.0.80 
+tf_keras==2.16.0 
+dlib==19.20.0 
+cmake== 3.29.3 

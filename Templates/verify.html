@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Verification and Liveness Check</title>
+    <script>
+        async function getVerificationResult() {
+            const response = await fetch('/face-verification-result');
+            const data = await response.json();
+            document.getElementById('verification-result').innerText = data.verification_result;
+        }
+    </script>
+</head>
+<body>
+    <h1 align = "center">Face Verification and Liveness Check</h1>
+    <h2 align ="center">Live Camera Feed</h2>
+
+    <div align="center">
+        <img src="/face-verification" width="1280" height="720">
+    </div>
+
+    <div align="center">
+        <form action="/face-verification-result" method="get">
+            <button type="submit">Get Verification Result</button> <!-- not functional! edit-->
+        </form>
+    </div>
+
+</body>
+</html> 
