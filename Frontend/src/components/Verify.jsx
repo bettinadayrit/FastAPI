@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Heading, Button, Text, Box, Spinner, Alert, AlertIcon } from "@chakra-ui/react";
 
-function useInterval(callback, delay) { // function for delays and to allow continuous checking for verficiation results. 
+function useInterval(callback, delay) { // function for delays and recurring check for verification results every 5 secs
     const savedCallback = useRef();
     useEffect(() => {
         savedCallback.current = callback;
@@ -27,11 +27,11 @@ function MyForm() {
     const [verificationResult, setVerificationResult] = useState('Pending');
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleFileInputChange = (event) => {
+    const handleFileInputChange = (event) => { // when form input file is changed 
         setFile(event.target.files[0]);
     };
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event) => { // when form button is pressed (submitted)
         event.preventDefault();
 
         if (!file) { // if no file selected, return error 
@@ -64,17 +64,17 @@ function MyForm() {
         }
     };
 
-    const fetchVerificationResult = async () => {
+    const fetchVerificationResult = async () => { // getting verification result in endpoint
         try {
             const response = await fetch("http://localhost:8000/verification-result");
             if (response.ok) {
                 const result = await response.json();
                 setVerificationResult(result.result);
             } else {
-                console.error("Failed to fetch verification result");
+                setVerificationResult("Failed to fetch verification result.");
             }
         } catch (error) {
-            console.error("Error fetching verification result:", error);
+            setVerificationResult("Error fetching verification result.");
         }
     };
 
@@ -92,7 +92,6 @@ function MyForm() {
             p={4} 
             rounded='md' 
             alignSelf="center">
-
                 <div align="center">
                     <Heading as="h2" size="md" fontWeight="bold" m={1}>
                         Face Verification and Liveness Check
@@ -100,6 +99,7 @@ function MyForm() {
                     <Heading as="h3" size="sm" fontStyle="italic" fontWeight="normal" m={1}>
                         Select File from Database for Verification
                     </Heading>
+
                     <input type="file" onChange={handleFileInputChange} accept="image/jpeg, image/png" />
                     <form onSubmit={handleSubmit}>
                         <Button 
@@ -112,7 +112,7 @@ function MyForm() {
                         </Button>
                     </form>
 
-                    {isProcessing && <Spinner size="lg" />}
+                    {isProcessing && <Spinner size="lg" />} 
 
                     {uploadStatus === 'success' && (
                         <Alert status="success" mt={3} justifyContent='center' display='flex' borderRadius="md">
@@ -149,14 +149,14 @@ function MyForm() {
             ounded='md'>
                 <div align="center">
                     {verificationResult && (
-                        <div>
-                            <Heading as="h3" size="sm" fontWeight="normal" fontStyle='italic'>
-                                Verification result:
-                            </Heading>
-                            <Text fontSize={24} fontWeight="bold">
-                                {verificationResult}
-                            </Text>
-                        </div>
+                    <div>
+                    <Heading as="h3" size="sm" fontWeight="normal" fontStyle='italic'>
+                        Verification result:
+                    </Heading>
+                    <Text fontSize={24} fontWeight="bold">
+                        {verificationResult}
+                    </Text>
+                    </div>
                     )}
                 </div>
             </Box>

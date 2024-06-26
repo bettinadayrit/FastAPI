@@ -1,17 +1,24 @@
-
 import cv2
 import dlib
 import math
 import secrets
 import time
-from deepface import DeepFace
 import os
+from deepface import DeepFace
 
 # --- thresholds, set based on obsereved values from calculations
 BLINK_RATIO_THRESHOLD = 5 
 HEAD_TURN_ANGLE_THRESHOLD = 10
 HEAD_TILT_ANGLE_THRESHOLD_up = 17
 HEAD_TILT_ANGLE_THRESHOLD_down = 25
+
+class ActionConstants:
+    BLINK = "Blink"
+    TURN_RIGHT = "Turn right"
+    TURN_LEFT = "Turn left"
+    LOOK_UP = "Look up"
+    LOOK_DOWN = "Look down"
+    actions = [BLINK, TURN_RIGHT, TURN_LEFT, LOOK_UP, LOOK_DOWN]
 
 verification_result_storage = {"result": "Pending"} # initial value of verification result
 
@@ -21,7 +28,7 @@ def midpoint(point1 ,point2): # formula
 def euclidean_distance(point1 , point2): # formula
     return math.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
 
-def get_blink_ratio(eye_points, facial_landmarks): # projects face landmarks points to live feed -> then gets its values
+def get_blink_ratio(eye_points, facial_landmarks): # projects eye landmarks points to live feed -> then gets its values
     corner_left  = (facial_landmarks.part(eye_points[0]).x, facial_landmarks.part(eye_points[0]).y) 
     corner_right = (facial_landmarks.part(eye_points[3]).x, facial_landmarks.part(eye_points[3]).y)
     center_top = midpoint(facial_landmarks.part(eye_points[1]), facial_landmarks.part(eye_points[2]))
@@ -56,30 +63,23 @@ def get_head_tilt_angle(facial_landmarks):
     return angle
 
 def get_random_action():
-    actions = ["Blink", "Turn right", "Turn left", "Look up", "Look down"]
-    return secrets.choice(actions)
+    return secrets.choice(ActionConstants.actions)
 
 def check_action(action, blink_ratio, head_turn_angle, head_tilt_angle):
-    if action == "Blink" and blink_ratio > BLINK_RATIO_THRESHOLD:
+    if action == ActionConstants.BLINK and blink_ratio > BLINK_RATIO_THRESHOLD:
         return True
-    elif action == "Turn right" and head_turn_angle < -HEAD_TURN_ANGLE_THRESHOLD:
+    elif action == ActionConstants.TURN_RIGHT and head_turn_angle < -HEAD_TURN_ANGLE_THRESHOLD:
         return True
-    elif action == "Turn left" and head_turn_angle > HEAD_TURN_ANGLE_THRESHOLD:
+    elif action == ActionConstants.TURN_LEFT and head_turn_angle > HEAD_TURN_ANGLE_THRESHOLD:
         return True
-    elif action == "Look up" and head_tilt_angle < HEAD_TILT_ANGLE_THRESHOLD_up:
+    elif action == ActionConstants.LOOK_UP and head_tilt_angle < HEAD_TILT_ANGLE_THRESHOLD_up:
         return True
-    elif action == "Look down" and head_tilt_angle > HEAD_TILT_ANGLE_THRESHOLD_down:
+    elif action == ActionConstants.LOOK_DOWN and head_tilt_angle > HEAD_TILT_ANGLE_THRESHOLD_down:
         return True
     return False
 
-def makedirectory():
-    if not os.path.exists("Autocaptures"):
-        os.mkdir("Autocaptures")
-    else:
-       pass
-
 def liveness_check(user_input):
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     global verification_result_storage
 
     detector = dlib.get_frontal_face_detector() 
